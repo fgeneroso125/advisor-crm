@@ -41,7 +41,7 @@ export async function seamlessLeads() {
     let res;
     try { res = await api("/search/contacts", { method: "POST", body }); }
     catch (e) { if (body.nextToken) { await setState(stateKey, null); res = await api("/search/contacts", { method: "POST", body: { ...body, nextToken: null } }); } else throw e; }
-    budget -= Math.ceil((res.data?.length || 0) / 10);     // search costs ~1 credit per 10 results
+                  budget -= 1;     // each search call appears to cost about 1 credit
     await setState(stateKey, res.supplementalData?.nextToken || null);
     const fresh = (res.data || []).filter(c => c.searchResultId && !known.has(c.liUrl));
     console.log(`seamless ${s.key}: ${res.data?.length || 0} results, ${fresh.length} new`);
