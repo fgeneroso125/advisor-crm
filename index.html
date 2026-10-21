@@ -44,7 +44,7 @@ dialog::backdrop{background:#0008}.mu{color:var(--mu)}.hide{display:none}
 <div style="display:flex;gap:8px;margin-top:12px"><button class="pri" id="save">Save</button><button id="del" style="color:#c0392b">Delete</button><button id="cancel" style="margin-left:auto">Close</button></div></dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
-const SUPABASE_URL="https://abcd.supabase.co", SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzaGNpZ2NxYWFta3RqeW5yZnd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1OTMwMjUsImV4cCI6MjEwODE2OTAyNX0.mz675H8kp35fOcxx5GIoLXmf5WRAcRYgJ3XcxeXF4tY";
+const SUPABASE_URL="https://ashcigcqaamktjynrfwx.supabase.co", SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFzaGNpZ2NxYWFta3RqeW5yZnd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1OTMwMjUsImV4cCI6MjEwODE2OTAyNX0.mz675H8kp35fOcxx5GIoLXmf5WRAcRYgJ3XcxeXF4tY";
 const STAGES=["New Lead","Contacted","Discovery Call","Proposal","Client","Lost"];
 const F=["name","stage","email","phone","age","assets","intent","score","source","link","consent","next_followup","signal","draft","notes"];
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);let leads=[],editId=null;
