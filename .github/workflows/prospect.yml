@@ -1,0 +1,25 @@
+name: Daily prospecting
+on:
+  schedule:
+    - cron: "0 11 * * *"   # 7am EDT
+    - cron: "0 12 * * *"   # 7am EST (script skips whichever isn't 7am ET)
+  workflow_dispatch: {}     # manual "Run workflow" button; always runs
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/prospect.mjs
+        env:
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          SEAMLESS_API_KEY: ${{ secrets.SEAMLESS_API_KEY }}
+          SEAMLESS_DAILY_CAP: ${{ vars.SEAMLESS_DAILY_CAP || '30' }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          DIGEST_EMAIL: ${{ secrets.DIGEST_EMAIL }}
