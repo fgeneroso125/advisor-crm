@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Advisor CRM</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#f6f7f9;--sf:#fff;--tx:#1b2430;--mu:#667085;--bd:#e3e6eb;--ac:#1f5eff;--ok:#12805c;--wn:#b54708}
+@media (prefers-color-scheme:dark){:root{--bg:#10141a;--sf:#1a2029;--tx:#e8ecf1;--mu:#8e9aab;--bd:#2b3441;--ac:#5b8cff;--ok:#3ccf9b;--wn:#f5a44b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,sans-serif}
+header{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;background:var(--sf);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:5}
+h1{font-size:16px;margin:0 8px 0 0}button,input,select,textarea{font:inherit;color:var(--tx)}
+button{background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:6px 12px;cursor:pointer}
+button.on,button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:7px 9px}
+textarea{min-height:70px}main{padding:16px;max-width:1400px;margin:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.kpi,.col,.card,.panel{background:var(--sf);border:1px solid var(--bd);border-radius:10px}
+.kpi{padding:10px 12px}.kpi b{display:block;font-size:22px}.kpi span{color:var(--mu);font-size:12px}
+.board{display:flex;gap:10px;overflow-x:auto;align-items:flex-start}.col{min-width:230px;flex:1;padding:8px}
+.col h3{font-size:12px;text-transform:uppercase;color:var(--mu);margin:2px 4px 8px;display:flex;justify-content:space-between}
+.col.over{outline:2px dashed var(--ac)}.card{padding:9px 10px;margin-bottom:8px;cursor:grab}.card small{color:var(--mu);display:block}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:99px;border:1px solid var(--bd);margin-right:4px}
+.hot{color:var(--ok);border-color:var(--ok)}.warm{color:var(--wn);border-color:var(--wn)}
+.panel{padding:14px;margin-bottom:14px}.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+label{font-size:12px;color:var(--mu);display:block;margin-bottom:3px}
+dialog{border:1px solid var(--bd);border-radius:12px;background:var(--sf);color:var(--tx);width:min(640px,94vw);padding:16px}
+dialog::backdrop{background:#0008}.mu{color:var(--mu)}.hide{display:none}
+#login{max-width:360px;margin:15vh auto;padding:20px}
+</style></head><body>
+<div id="login" class="panel hide"><h2 style="margin-top:0">Advisor CRM</h2><p class="mu">Enter your email for a one-time login link.</p>
+<input id="em" type="email" placeholder="you@firm.com"><button class="pri" id="send" style="margin-top:10px">Email me a link</button><p id="lm" class="mu"></p></div>
+<div id="app" class="hide">
+<header><h1>Advisor CRM</h1><nav><button data-v="pipe" class="on">Pipeline</button> <button data-v="brief">Daily brief</button></nav>
+<input id="q" placeholder="Search…" style="max-width:220px;margin-left:auto"><button id="imp">Import CSV</button><button id="exp">Export</button><button class="pri" id="add">+ Lead</button><button id="out">Log out</button></header>
+<main><div id="v-pipe"><div class="kpis" id="kpis"></div><div class="board" id="board"></div></div>
+<div id="v-brief" class="hide"><div class="panel"><h2 style="margin-top:0;font-size:16px">New prospects today</h2><div id="briefList"></div><p class="mu" id="runInfo"></p></div></div></main>
+<input type="file" id="file" accept=".csv" class="hide"></div>
+<dialog id="dlg"><div class="row"><div><label>Name</label><input id="f_name"></div><div><label>Stage</label><select id="f_stage"></select></div>
+<div><label>Email</label><input id="f_email"></div><div><label>Phone</label><input id="f_phone"></div>
+<div><label>Age</label><input id="f_age" type="number"></div><div><label>Est. assets ($)</label><input id="f_assets" type="number"></div>
+<div><label>Intent</label><select id="f_intent"><option>Rollover</option><option>Advisor seeker</option><option>Both</option></select></div><div><label>Score</label><input id="f_score" type="number"></div>
+<div><label>Source</label><input id="f_source"></div><div><label>Source link</label><input id="f_link"></div>
+<div><label>Consent / contact basis</label><input id="f_consent"></div><div><label>Next follow-up</label><input id="f_next_followup" type="date"></div></div>
+<label style="margin-top:10px">Signal</label><textarea id="f_signal"></textarea><label style="margin-top:10px">Outreach draft (review for compliance before use)</label><textarea id="f_draft" style="min-height:110px"></textarea>
+<label style="margin-top:10px">Notes</label><textarea id="f_notes"></textarea>
+<div style="display:flex;gap:8px;margin-top:12px"><button class="pri" id="save">Save</button><button id="del" style="color:#c0392b">Delete</button><button id="cancel" style="margin-left:auto">Close</button></div></dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL="PASTE_SUPABASE_URL", SUPABASE_ANON_KEY="PASTE_SUPABASE_ANON_KEY";
+const STAGES=["New Lead","Contacted","Discovery Call","Proposal","Client","Lost"];
+const F=["name","stage","email","phone","age","assets","intent","score","source","link","consent","next_followup","signal","draft","notes"];
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);let leads=[],editId=null;
+const $=i=>document.getElementById(i),today=()=>new Date().toLocaleDateString("en-CA",{timeZone:"America/New_York"});
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money=n=>n?"$"+Number(n).toLocaleString():"—";
+async function boot(){const{data}=await sb.auth.getSession();if(!data.session){$("login").classList.remove("hide");return}
+ $("login").classList.add("hide");$("app").classList.remove("hide");await load()}
+async function load(){const{data,error}=await sb.from("leads").select("*").order("score",{ascending:false});if(error)return alert(error.message);leads=data;render();
+ const r=await sb.from("agent_runs").select("*").order("ran_at",{ascending:false}).limit(1);
+ $("runInfo").textContent=r.data&&r.data[0]?"Last agent run: "+new Date(r.data[0].ran_at).toLocaleString("en-US",{timeZone:"America/New_York"})+" ET — found "+r.data[0].found+", added "+r.data[0].added:"Agent has not run yet."}
+$("send").onclick=async()=>{const{error}=await sb.auth.signInWithOtp({email:$("em").value,options:{emailRedirectTo:location.href.split("#")[0]}});$("lm").textContent=error?error.message:"Check your email for the login link."};
+$("out").onclick=async()=>{await sb.auth.signOut();location.reload()};
+function render(){const q=$("q").value.toLowerCase(),L=leads.filter(l=>!q||JSON.stringify(l).toLowerCase().includes(q)),open=L.filter(l=>!["Client","Lost"].includes(l.stage));
+ $("kpis").innerHTML=[["Total",leads.length],["New today",leads.filter(l=>l.added===today()).length],["Hot (80+)",leads.filter(l=>l.score>=80).length],["Open pipeline",money(open.reduce((a,l)=>a+(+l.assets||0),0))],["Clients",leads.filter(l=>l.stage==="Client").length],["Follow-ups due",leads.filter(l=>l.next_followup&&l.next_followup<=today()&&!["Client","Lost"].includes(l.stage)).length]].map(k=>`<div class="kpi"><b>${k[1]}</b><span>${k[0]}</span></div>`).join("");
+ $("board").innerHTML=STAGES.map(s=>{const c=L.filter(l=>l.stage===s);return `<div class="col" data-s="${s}"><h3>${s}<span>${c.length}</span></h3>${c.map(l=>`<div class="card" draggable="true" data-id="${l.id}"><b>${esc(l.name)}</b><small>${esc(l.intent||"")} · ${money(l.assets)}${l.age?" · "+l.age:""}</small><span class="tag ${l.score>=80?"hot":l.score>=60?"warm":""}">${l.score??"–"}</span><span class="tag">${esc(l.source||"")}</span></div>`).join("")}</div>`}).join("");
+ document.querySelectorAll(".card").forEach(c=>{c.ondragstart=e=>e.dataTransfer.setData("t",c.dataset.id);c.onclick=()=>open_(c.dataset.id)});
+ document.querySelectorAll(".col").forEach(c=>{c.ondragover=e=>{e.preventDefault();c.classList.add("over")};c.ondragleave=()=>c.classList.remove("over");
+  c.ondrop=async e=>{e.preventDefault();c.classList.remove("over");const id=e.dataTransfer.getData("t");await sb.from("leads").update({stage:c.dataset.s}).eq("id",id);load()}});
+ const nl=leads.filter(l=>l.added===today());$("briefList").innerHTML=nl.length?"<ul>"+nl.map(l=>`<li><b>${esc(l.name)}</b> <span class="tag ${l.score>=80?"hot":"warm"}">${l.score}</span>${esc(l.intent)} · ${esc(l.source)}<br><span class="mu">${esc(l.signal)}</span> <a href="${esc(l.link)}" target="_blank" rel="noopener">post</a></li>`).join("")+"</ul>":'<p class="mu">Nothing new today yet.</p>'}
+function open_(id){editId=id;const l=leads.find(x=>x.id===id)||{stage:"New Lead",intent:"Advisor seeker"};$("f_stage").innerHTML=STAGES.map(s=>`<option>${s}</option>`).join("");F.forEach(k=>$("f_"+k).value=l[k]??"");$("dlg").showModal()}
+$("add").onclick=()=>open_(null);$("cancel").onclick=()=>$("dlg").close();$("q").oninput=render;
+$("save").onclick=async()=>{const l={};F.forEach(k=>{let v=$("f_"+k).value;if(["age","assets","score"].includes(k))v=v===""?null:+v;if(k==="next_followup"&&!v)v=null;l[k]=v});if(!l.name)return alert("Name required");
+ const r=editId?await sb.from("leads").update(l).eq("id",editId):await sb.from("leads").insert(l);if(r.error)return alert(r.error.message);$("dlg").close();load()};
+$("del").onclick=async()=>{if(editId&&confirm("Delete?")){await sb.from("leads").delete().eq("id",editId);load()}$("dlg").close()};
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b));["pipe","brief"].forEach(v=>$("v-"+v).classList.toggle("hide",v!==b.dataset.v))});
+function parseCSV(t){const rows=[];let r=[],c="",q=false;for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch=='"'&&t[i+1]=='"'){c+='"';i++}else if(ch=='"')q=false;else c+=ch}else if(ch=='"')q=true;else if(ch==","){r.push(c);c=""}else if(ch=="\n"||ch=="\r"){if(ch=="\r"&&t[i+1]=="\n")i++;r.push(c);rows.push(r);r=[];c=""}else c+=ch}if(c||r.length){r.push(c);rows.push(r)}return rows}
+$("imp").onclick=()=>$("file").click();
+$("file").onchange=async e=>{const f=e.target.files[0];if(!f)return;const rows=parseCSV(await f.text()),h=rows[0].map(x=>x.trim().toLowerCase());
+ const g=(r,...k)=>{for(const n of k){const i=h.findIndex(x=>x.includes(n));if(i>=0&&r[i])return r[i].trim()}return null};
+ const out=rows.slice(1).filter(r=>r.length>1).map(r=>({name:g(r,"full name","name")||((g(r,"first")||"")+" "+(g(r,"last")||"")).trim(),email:g(r,"email"),phone:g(r,"phone","mobile"),source:"Import: "+f.name,link:g(r,"linkedin","profile","url"),consent:"Imported list; verify contact basis before outreach",signal:[g(r,"title"),g(r,"company")].filter(Boolean).join(" at ")||null,score:50})).filter(x=>x.name);
+ const r=await sb.from("leads").upsert(out,{onConflict:"link",ignoreDuplicates:true});alert(r.error?r.error.message:"Imported "+out.length+" rows");e.target.value="";load()};
+$("exp").onclick=()=>{const csv=[F.join(",")].concat(leads.map(l=>F.map(k=>'"'+String(l[k]??"").replace(/"/g,'""')+'"').join(","))).join("\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="leads.csv";a.click()};
+sb.auth.onAuthStateChange(()=>{boot()});boot();
+</script></body></html>
