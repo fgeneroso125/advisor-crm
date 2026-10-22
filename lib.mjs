@@ -16,7 +16,7 @@ export async function setState(key, value) {
 }
 
 // Ask Claude for a JSON array back.
-export async function askClaudeJSON(prompt, max_tokens = 4000) {
+export async function askClaudeJSON(prompt, max_tokens = 8000) {
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": E.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
