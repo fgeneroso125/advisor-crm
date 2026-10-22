@@ -93,7 +93,20 @@ PEOPLE:\n${items}`);
           signal: m.signal + (p.age ? ` (age is an estimate from career start)` : ""), draft: m.draft,
         });
       }
-    } catch (e) { console.log("seamless scoring error:", e.message); }
+        } catch (e) {
+      console.log("seamless scoring error:", e.message);
+      for (const p of chunk) {
+        const c = p.c;
+        rows.push({
+          name: c.fullName, age: p.age, assets: null,
+          intent: p.kind === "Job change" ? "Rollover" : "Advisor seeker", score: 50,
+          email: c.email1EmailAI === "invalid" ? null : (c.email || c.email1 || null), phone: c.contactPhone1 || null,
+          source: "Seamless " + p.kind, link: c.lIProfileUrl || "seamless:" + c.contactId,
+          consent: "Seamless business-contact data. Email needs CAN-SPAM opt-out and physical address. Mobile numbers: no calls/texts without consent.",
+          signal: `${c.title || ""} at ${c.company || ""} (not scored; scoring failed)`, draft: "",
+        });
+      }
+    }
   }
   return { found: done.size, rows };
 }
