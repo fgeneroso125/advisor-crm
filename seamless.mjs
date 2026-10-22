@@ -74,8 +74,8 @@ export async function seamlessLeads() {
     .filter(p => p.age === null ? ["Director", "VP", "C-Level"].includes(p.c.seniority) : p.age >= 35);
 
   const rows = [];
-  for (let i = 0; i < people.length; i += 20) {
-    const chunk = people.slice(i, i + 20);
+  for (let i = 0; i < people.length; i += 6) {
+    const chunk = people.slice(i, i + 6);
     const items = chunk.map((p, j) => `#${j} ${p.c.fullName} | ${p.c.title} at ${p.c.company} (${p.c.companyIndustry || "?"}, ${p.c.companyStaffCountRange || "?"}) | seniority ${p.c.seniority} | ${p.c.contactLocation?.city || ""} ${p.c.contactLocation?.stateAbbr || ""} | est age ${p.age ?? "?"} | list: ${p.kind} | job change: ${p.c.jobChangeAlert || "none"}${p.c.formerCompany ? `, left ${p.c.formerCompany} (${p.c.formerEndedAt || "?"})` : ""} | time at company ${p.c.timeAtCompany || "?"}`).join("\n");
     try {
       const out = await askClaudeJSON(`You are a prospecting analyst for a nationwide RIA. Target: working professionals in management or above, age 35+, likely with $100k+ in retirement assets. Recent job changers (who left an employer) often have an old 401(k) to roll over.
