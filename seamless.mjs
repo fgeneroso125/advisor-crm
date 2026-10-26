@@ -86,7 +86,7 @@ PEOPLE:\n${items}`);
         const p = chunk[m.i]; if (!p || m.score < 50) continue;
         const c = p.c, mobile = /mobile/i.test(c.contactPhone1DataType || "");
         rows.push({
-          name: c.fullName, age: p.age, assets: null, intent: m.intent, score: m.score,
+          name: c.fullName, state: c.contactLocation?.stateAbbr || null, city: c.contactLocation?.city || null, age: p.age, assets: null, intent: m.intent, score: m.score,
           email: c.email1EmailAI === "invalid" ? null : (c.email || c.email1 || null), phone: c.contactPhone1 || null,
           source: "Seamless " + p.kind, link: c.lIProfileUrl || "seamless:" + c.contactId,
           consent: "Seamless business-contact data" + (mobile ? " (mobile number: no calls/texts without prior consent; check Do-Not-Call)" : "") + ". Email needs CAN-SPAM opt-out and physical address.",
